@@ -59,3 +59,38 @@ diff_op_decrease <- diff_op[decrease]
 # Get the average decrease in blood pressure for the subset of patients we just derived
 mean(diff_op_decrease)
 ```
+
+## Task 2: Basic Data Frame practice
+
+### Question 1
+
+```{r}
+# Using objects from Task 1, create a data frame!
+patient <- subj
+pre_bp <- pre
+post_bp <- post
+diff_bp <- diff_op
+
+df <- data.frame(patient, pre_bp, post_bp, diff_bp)
+rownames(df) <- NULL # No longer need row names to identify patients
+```
+
+### Question 2
+
+```{r}
+# Subset data frame to find negative diff_bp values
+df[df$diff_bp < 0,]
+```
+
+### Question 3
+
+```{r}
+# Add a true/false column for blood pressures less than 120
+df$low <- ifelse(df$post_bp < 120, TRUE, FALSE)
+```
+
+### Question 4
+
+```{r}
+knitr::kable(df)
+```
