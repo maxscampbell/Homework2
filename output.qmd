@@ -10,8 +10,10 @@ editor: visual
 
 ```{r}
 # Load in pre- and post-treatment data from assignment
-pre <- c(130, 128, 116, 124, 133, 134, 118, 126, 114, 127, 141, 138, 128, 140, 137, 131, 120, 128, 139, 135)
-post <- c(114, 98, 113, 99, 107, 116, 113, 111, 119, 117, 101, 119, 130, 122, 106, 106, 124, 102, 117, 113)
+pre <- c(130, 128, 116, 124, 133, 134, 118, 126, 114, 127, 
+         141, 138, 128, 140, 137, 131, 120, 128, 139, 135)
+post <- c(114, 98, 113, 99, 107, 116, 113, 111, 119, 117, 
+          101, 119, 130, 122, 106, 106, 124, 102, 117, 113)
 ```
 
 ### Question 2
@@ -34,7 +36,8 @@ diff_op
 ### Question 4
 
 ```{r}
-# Take the mean of diff_op to find the average decrease in blood pressure across the subjects
+# Take the mean of diff_op to find the average decrease in blood pressure 
+# across the subjects
 mean(diff_op)
 ```
 
@@ -56,7 +59,8 @@ diff_op_decrease <- diff_op[decrease]
 ### Question 7
 
 ```{r}
-# Get the average decrease in blood pressure for the subset of patients we just derived
+# Get the average decrease in blood pressure for the subset of patients 
+# we just derived
 mean(diff_op_decrease)
 ```
 
@@ -71,26 +75,164 @@ pre_bp <- pre
 post_bp <- post
 diff_bp <- diff_op
 
-df <- data.frame(patient, pre_bp, post_bp, diff_bp)
-rownames(df) <- NULL # No longer need row names to identify patients
+bp_df <- data.frame(patient, pre_bp, post_bp, diff_bp)
+rownames(bp_df) <- NULL # No longer need row names to identify patients
 ```
 
 ### Question 2
 
 ```{r}
 # Subset data frame to find negative diff_bp values
-df[df$diff_bp < 0,]
+bp_df[bp_df$diff_bp < 0,]
 ```
 
 ### Question 3
 
 ```{r}
 # Add a true/false column for blood pressures less than 120
-df$low <- ifelse(df$post_bp < 120, TRUE, FALSE)
+bp_df$normal <- ifelse(bp_df$post_bp < 120, TRUE, FALSE)
 ```
 
 ### Question 4
 
 ```{r}
-knitr::kable(df)
+knitr::kable(bp_df)
+```
+
+## Task 3: List practice
+
+### Question 1
+
+```{r}
+# Using code from tasks 1 and 2, create a data frame for the placebo
+pre_p <- c(138, 135, 147, 117, 152, 134, 114, 121, 131, 130)
+post_p <- c(105, 136, 123, 130, 134, 143, 135, 139, 120, 124)
+
+subj_p <- paste("Subject", 1:10, sep = "_")
+names(pre_p) <- subj_p
+names(post_p) <- subj_p
+
+diff_p <- pre_p - post_p
+
+# Create the dataframe
+bp_df_placebo <- data.frame("patient" = subj_p, "pre" = pre_p, 
+                            "post" = post_p, "diff" = diff_p)
+
+#Add the normal column
+bp_df_placebo$normal <- ifelse(bp_df_placebo$post < 120, TRUE, FALSE)
+
+```
+
+### Question 2
+
+```{r}
+# Create a list of two data frames
+bp_list <- list("treatment" = bp_df, "placebo" = bp_df_placebo)
+```
+
+### Question 3
+
+```{r}
+# Access the first element of the list in three different ways
+bp_list[1]
+bp_list[[1]]
+bp_list$treatment
+```
+
+### Question 4
+
+```{r}
+#Access the pre column in the placebo dataset
+bp_list[[2]]$pre
+```
+
+## Task 4: Control Flow Practice
+
+### Question 1
+
+```{r}
+# Create an empty column for the new status variable
+bp_list[[1]]$status <- character(20)
+bp_list[[2]]$status <- character(10)
+```
+
+### Question 2
+
+```{r}
+#Loop through each element of the list and assign a status to the 
+#patient's post-treatment blood pressure
+for (i in 1:20) {
+  if (bp_list[[1]]$post_bp[i] <= 120) {
+    bp_list[[1]]$status[i] <- "Optimal"
+  } else if (bp_list[[1]]$post_bp[i] > 120 || bp_list[[1]]$post_bp <= 130) {
+    bp_list[[1]]$status[i] <- "Borderline"
+  } else if (bp_list[[1]]$post_bp[i] > 130) {
+    bp_list[[1]]$status[i] <- "High"
+  } else {
+    bp_list[[1]]$status[i] <- "ERROR"
+  }
+}
+
+# Check the results!
+bp_list[[1]]$status
+```
+
+### Question 3
+
+```{r}
+#Loop through each element of the list and assign a status to the 
+#patient's post-treatment blood pressure
+for (i in 1:10) {
+  if (bp_list[[2]]$post[i] <= 120) {
+    bp_list[[2]]$status[i] <- "Optimal"
+  } else if (bp_list[[2]]$post[i] > 120 || bp_list[[1]]$post <= 130) {
+    bp_list[[2]]$status[i] <- "Borderline"
+  } else if (bp_list[[2]]$postp[i] > 130) {
+    bp_list[[2]]$status[i] <- "High"
+  } else {
+    bp_list[[2]]$status[i] <- "ERROR"
+  }
+}
+
+# Check the results!
+bp_list[[2]]$status
+```
+
+## Task 5: Function Writing
+
+### Question 1
+
+```{r}
+# Create summary_stats function
+summary_stats <- function(list_obj, stat = "mean") {
+  # Sanity checks to ensure correct arguments are passed
+  if(!is.list(list_obj)) {
+    stop("list_obj argument did not pass a list.")
+  } else if (!length(list_obj) == 2) {
+    stop("list_obj argument is not of length 2.")
+  } else if (!(is.data.frame(list_obj[[1]]) || is.data.frame(list_obj[[2]]))) {
+    stop("One or more objects within list_obj are not of type data.frame")
+  }
+  
+  # Get stat type to pass through
+  my_fun <- get(stat)
+  
+  # Create a vector of names based on the stat value and an empty vector store values
+  names_dynamic <- paste(stat, c("pre", "post", "diff", "pre", "post", "diff"),
+                      c("trt", "trt", "trt", "placebo", "placebo", "placebo"),
+                      sep = "_")
+  
+  # Apply the my_fun stat to each relevant column and apply the name
+  vec <- c(colMeans(bp_list[[1]][2:4]), colMeans(bp_list[[2]][2:4]))
+  names(vec) <- names_dynamic
+  
+  return(vec)
+}
+
+#Test out the brand new function
+summary_stats(bp_list)
+summary_stats(bp_list, "var")
+summary_stats(bp_list, "sd")
+summary_stats(bp_list, "min")
+summary_stats(bp_list, "max")
 ```
